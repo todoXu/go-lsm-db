@@ -42,10 +42,6 @@ func Recover(path string, callback func(key kv.Key, value kv.Value)) (*WAL, erro
 	if err != nil {
 		return nil, err
 	}
-	fileStat, _ := file.Stat()
-
-	bytes1 := make([]byte, fileStat.Size())
-	file.ReadAt(bytes1, 0)
 
 	file.Seek(0, 0)
 	bytes, _ := io.ReadAll(file)
