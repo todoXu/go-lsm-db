@@ -33,7 +33,7 @@ func (k Key) isLesserThan(other Key) bool {
 	return k.timestamp < other.timestamp
 }
 
-func (k Key) isEqual(other Key) bool {
+func (k Key) IsEqual(other Key) bool {
 	return bytes.Equal(k.key, other.key) && k.timestamp == other.timestamp
 }
 
