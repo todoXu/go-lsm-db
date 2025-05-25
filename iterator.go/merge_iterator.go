@@ -101,20 +101,31 @@ func (mergeIterator *MergeIterator) IsValid() bool {
 // 跳过所有key相同 时间戳不同的键 例如 apple@300 apple@200 banana@100
 // apple@300的next是banana@100
 func (mergeIterator *MergeIterator) Next() error {
+	heap.Push(mergeIterator.iterators, mergeIterator.current)
 	mergeIterator.advanceOtherIteratorsOnSameKey()
+	mergeIterator.current = heap.Pop(mergeIterator.iterators).(IndexedIterator)
 	return nil
 }
 
-func (mergeIterator *MergeIterator) advanceOtherIteratorsOnSameKey() error {
-	current := mergeIterator.current
+func (mergeIterator *MergeIterator) Close() {
+	mergeIterator.current.iter.Close()
+	if mergeIterator.iterators != nil && mergeIterator.iterators.Len() > 0 {
+		for _, anIterator := range *mergeIterator.iterators {
+			anIterator.iter.Close()
+		}
+	}
+	mergeIterator.onCloseCallback()
+}
 
+func (mergeIterator *MergeIterator) advanceOtherIteratorsOnSameKey() error {
+	currentKey := kv.NewKey(mergeIterator.current.iter.Key().RawBytes(), mergeIterator.current.iter.Key().Timestamp())
 	for mergeIterator.iterators.Len() > 0 {
 		topIterator := (*mergeIterator.iterators)[0]
-		if !bytes.Equal(current.iter.Key().RawBytes(), topIterator.iter.Key().RawBytes()) {
+		if !bytes.Equal(currentKey.RawBytes(), topIterator.iter.Key().RawBytes()) {
 			break
 		}
 
-		if err := mergeIterator.advance(topIterator); err != nil {
+		if err := topIterator.iter.Next(); err != nil {
 			heap.Pop(mergeIterator.iterators).(IndexedIterator).iter.Close()
 			return err
 		}
@@ -127,8 +138,4 @@ func (mergeIterator *MergeIterator) advanceOtherIteratorsOnSameKey() error {
 	}
 
 	return nil
-}
-
-func (mergeIterator *MergeIterator) advance(indexedIterator IndexedIterator) error {
-	return indexedIterator.iter.Next()
 }

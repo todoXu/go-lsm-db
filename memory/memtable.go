@@ -141,7 +141,7 @@ func (memtable *Memtable) Scan(inclusiveRange kv.InclusiveKeyRange) *MemtableIte
 		currKey := elem.Key().(kv.Key)
 
 		if CompareKeysForRangeCheck(inclusiveRange.Start(), currKey) <= 0 &&
-			(inclusiveRange.End().IsRawKeyEmpty() || CompareKeysForRangeCheck(currKey, inclusiveRange.End()) <= 0) {
+			CompareKeysForRangeCheck(currKey, inclusiveRange.End()) <= 0 {
 			iter.skipListIter = elem
 			break
 		}
@@ -199,7 +199,6 @@ type MemtableIterator struct {
 }
 
 func (iter *MemtableIterator) IsValid() bool {
-	// 如果迭代器为nil，返回false
 	if iter.skipListIter == nil {
 		return false
 	}

@@ -22,7 +22,7 @@ func NewKey(key []byte, timestamp uint64) Key {
 	}
 }
 
-func (k Key) isLesserThan(other Key) bool {
+func (k Key) IsLessThanOrEqualTo(other Key) bool {
 	cmp := bytes.Compare(k.key, other.key)
 	if cmp < 0 {
 		return true
@@ -30,7 +30,7 @@ func (k Key) isLesserThan(other Key) bool {
 		return false
 	}
 	// cmp == 0
-	return k.timestamp < other.timestamp
+	return k.timestamp <= other.timestamp
 }
 
 func (k Key) IsEqual(other Key) bool {
